@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAIWAN - Othello</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a12;
+    color: #e0e0e0;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 28px;
+    color: #ffcc00;
+    letter-spacing: 6px;
+    text-shadow: 0 0 20px rgba(255,204,0,0.4);
+  }
+  .header p { color: #888; font-size: 12px; margin-top: 4px; }
+
+  .game-info {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .info-item { text-align: center; }
+  .info-item .label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; }
+  .info-item .value { font-size: 28px; font-weight: bold; }
+  .info-item.black .value { color: #1a1a1a; text-shadow: 0 0 8px #555; }
+  .info-item.white .value { color: #f0f0f0; }
+  .info-item.turn .value { color: #ffcc00; }
+  .info-item.turn .value.inactive { color: #444; }
+
+  .board-wrap {
+    position: relative;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 52px);
+    grid-template-rows: repeat(8, 52px);
+    border: 3px solid #3a3a5a;
+    box-shadow: 0 0 40px rgba(80,80,180,0.3), inset 0 0 20px rgba(0,0,0,0.5);
+    background: #1a1a2e;
+  }
+  .cell {
+    width: 52px;
+    height: 52px;
+    border: 1px solid #2a2a4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .cell:hover { background: rgba(255,255,255,0.05); }
+  .cell.valid-hint::after {
+    content: '';
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,204,0,0.25);
+    border: 1px solid rgba(255,204,0,0.4);
+  }
+  .cell.valid-hint:hover::after { background: rgba(255,204,0,0.5); }
+  .piece {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .piece.black {
+    background: radial-gradient(circle at 35% 35%, #555, #1a1a1a 60%);
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.6), inset -2px -2px 4px rgba(0,0,0,0.4), inset 2px 2px 4px rgba(80,80,80,0.2);
+  }
+  .piece.white {
+    background: radial-gradient(circle at 35% 35%, #fff, #d0d0d0 60%);
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.1), inset 2px 2px 4px rgba(255,255,255,0.8);
+  }
+  .piece.new {
+    animation: place 0.25s ease-out;
+  }
+  @keyframes place {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .piece.flip {
+    animation: flip 0.3s ease-in-out;
+  }
+  @keyframes flip {
+    0% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+    100% { transform: scaleY(1); }
+  }
+
+  .controls {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #3a3a6a;
+    color: #aaa;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .btn:hover { border-color: #ffcc00; color: #ffcc00; }
+  .btn.danger { border-color: #553333; color: #aa6666; }
+  .btn.danger:hover { border-color: #ff6666; color: #ff6666; }
+
+  .message {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #ffcc00;
+    min-height: 20px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .game-over-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+  }
+  .game-over-overlay.show { display: flex; }
+  .game-over-overlay h2 { font-size: 36px; color: #ffcc00; letter-spacing: 4px; margin-bottom: 16px; text-shadow: 0 0 30px rgba(255,204,0,0.5); }
+  .game-over-overlay p { font-size: 20px; color: #ccc; margin-bottom: 24px; }
+  .game-over-overlay .btn { font-size: 16px; padding: 10px 32px; }
+  .legend { margin-top: 12px; font-size: 11px; color: #555; text-align: center; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>TAIWAN</h1>
+  <p>黑白棋 Othello / Reversi &nbsp;|&nbsp; 點擊格子放子</p>
+</div>
+
+<div class="game-info">
+  <div class="info-item black">
+    <div class="label">黑方 X</div>
+    <div class="value" id="score-black">2</div>
+  </div>
+  <div class="info-item turn">
+    <div class="label">目前輪到</div>
+    <div class="value" id="turn-indicator">●</div>
+  </div>
+  <div class="info-item white">
+    <div class="label">白方 O</div>
+    <div class="value" id="score-white">2</div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="message" id="message"></div>
+
+<div class="controls">
+  <button class="btn" onclick="passTurn()">Pass 跳過</button>
+  <button class="btn danger" onclick="restartGame()">Restart 重來</button>
+</div>
+
+<div class="legend">方向鍵 / WASD 移動 &nbsp;|&nbsp; Enter / 空白鍵 放子 &nbsp;|&nbsp; P 跳過 &nbsp;|&nbsp; R 重來</div>
+
+<div class="game-over-overlay" id="game-over">
+  <h2 id="winner-text">GAME OVER</h2>
+  <p id="final-score"></p>
+  <button class="btn" onclick="restartGame()">再玩一次</button>
+</div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const EMPTY = 0, BLACK = 1, WHITE = 2;
+const BOARD_SIZE = 8;
+const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+
+// ─── State ──────────────────────────────────────────────────────────────────
+let board, currentPlayer, cursorR, cursorC, gameEnded;
+
+// ─── Init ───────────────────────────────────────────────────────────────────
+function init() {
+  board = Array.from({length: BOARD_SIZE}, () => Array(BOARD_SIZE).fill(EMPTY));
+  board[3][3] = WHITE; board[3][4] = BLACK;
+  board[4][3] = BLACK; board[4][4] = WHITE;
+  currentPlayer = BLACK;
+  cursorR = 3; cursorC = 4;
+  gameEnded = false;
+  renderBoard();
+  updateInfo();
+  hideOverlay();
+}
+
+// ─── Render ─────────────────────────────────────────────────────────────────
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  const validMoves = getValidMoves(currentPlayer);
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+
+      if (r === cursorR && c === cursorC) {
+        cell.style.boxShadow = '0 0 0 2px #ffcc00';
+      }
+
+      const isValid = validMoves.some(m => m[0]===r && m[1]===c);
+      if (isValid && !gameEnded) cell.classList.add('valid-hint');
+
+      if (board[r][c] !== EMPTY) {
+        const piece = document.createElement('div');
+        piece.className = 'piece ' + (board[r][c] === BLACK ? 'black' : 'white');
+        piece.id = `piece-${r}-${c}`;
+        cell.appendChild(piece);
+      }
+
+      cell.addEventListener('click', () => onCellClick(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function updateInfo() {
+  const bc = count(BLACK), wc = count(WHITE);
+  document.getElementById('score-black').textContent = bc;
+  document.getElementById('score-white').textContent = wc;
+  const turnEl = document.getElementById('turn-indicator');
+  if (gameEnded) {
+    turnEl.textContent = '—';
+    turnEl.style.color = '#444';
+  } else {
+    turnEl.textContent = currentPlayer === BLACK ? '●' : '○';
+    turnEl.style.color = currentPlayer === BLACK ? '#ffcc00' : '#f0f0f0';
+    turnEl.style.textShadow = currentPlayer === BLACK ? '0 0 8px #ffcc00' : '0 0 8px #aaa';
+  }
+}
+
+function setMessage(text) {
+  document.getElementById('message').textContent = text;
+}
+
+// ─── Logic ─────────────────────────────────────────────────────────────────
+function findFlips(r, c, player) {
+  if (board[r][c] !== EMPTY) return [];
+  const opponent = player === BLACK ? WHITE : BLACK;
+  let flips = [];
+  for (const [dr, dc] of DIRS) {
+    let nr = r+dr, nc = c+dc, line = [];
+    while (nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && board[nr][nc] === opponent) {
+      line.push([nr, nc]);
+      nr += dr; nc += dc;
+    }
+    if (line.length && nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && board[nr][nc] === player) {
+      flips.push(...line);
+    }
+  }
+  return flips;
+}
+
+function getValidMoves(player) {
+  const moves = [];
+  for (let r = 0; r < BOARD_SIZE; r++)
+    for (let c = 0; c < BOARD_SIZE; c++)
+      if (findFlips(r, c, player).length) moves.push([r, c]);
+  return moves;
+}
+
+function count(player) {
+  return board.flat().filter(v => v === player).length;
+}
+
+function placeAndFlip(r, c, player) {
+  const flips = findFlips(r, c, player);
+  board[r][c] = player;
+  flips.forEach(([fr, fc]) => { board[fr][fc] = player; });
+}
+
+function computerMove() {
+  const moves = getValidMoves(WHITE);
+  if (!moves.length) return;
+  // Priority: corner > edge > most flips
+  const corners = [[0,0],[0,7],[7,0],[7,7]];
+  const cornerMove = moves.find(m => corners.some(c => c[0]===m[0]&&c[1]===m[1]));
+  if (cornerMove) { doMove(computerMove, cornerMove); return; }
+  let best = moves[0], bestFlips = findFlips(moves[0][0],moves[0][1],WHITE).length;
+  for (const m of moves) {
+    const f = findFlips(m[0],m[1],WHITE).length;
+    if (f > bestFlips) { best = m; bestFlips = f; }
+  }
+  doMove(computerMove, best);
+}
+
+function doMove(moveFn, [r, c]) {
+  // Animate flip then place
+  const flips = findFlips(r, c, currentPlayer);
+  board[r][c] = currentPlayer;
+
+  // Animate existing pieces flipping
+  for (const [fr, fc] of flips) {
+    const el = document.getElementById(`piece-${fr}-${fc}`);
+    if (el) {
+      el.classList.add('flip');
+      setTimeout(() => {
+        board[fr][fc] = currentPlayer;
+        el.className = `piece ${currentPlayer===BLACK?'black':'white'}`;
+        setTimeout(() => el.classList.remove('flip'), 300);
+      }, 150);
+    }
+  }
+
+  // Animate new piece
+  setTimeout(() => {
+    renderBoard();
+    const newEl = document.getElementById(`piece-${r}-${c}`);
+    if (newEl) newEl.classList.add('new');
+    updateInfo();
+    advanceTurn();
+  }, flips.length ? 200 : 10);
+}
+
+function advanceTurn() {
+  const opponent = currentPlayer === BLACK ? WHITE : BLACK;
+  if (getValidMoves(opponent).length) {
+    currentPlayer = opponent;
+  } else if (getValidMoves(currentPlayer).length) {
+    setMessage('對手無法移動，繼續...');
+    setTimeout(() => { setMessage(''); renderBoard(); updateInfo(); }, 1200);
+  } else {
+    endGame(); return;
+  }
+  renderBoard(); updateInfo();
+  if (currentPlayer === WHITE && !gameEnded) {
+    setMessage('電腦思考中...');
+    setTimeout(() => { setMessage(''); computerMove(); }, 500);
+  }
+}
+
+function endGame() {
+  gameEnded = true;
+  const bc = count(BLACK), wc = count(WHITE);
+  let text;
+  if (bc > wc) text = `黑方勝！ ${bc} : ${wc}`;
+  else if (wc > bc) text = `白方勝！ ${bc} : ${wc}`;
+  else text = `平手！ ${bc} : ${wc}`;
+  document.getElementById('winner-text').textContent = text;
+  document.getElementById('final-score').textContent = `${bc} – ${wc}`;
+  document.getElementById('game-over').classList.add('show');
+  updateInfo();
+}
+
+function hideOverlay() {
+  document.getElementById('game-over').classList.remove('show');
+}
+
+// ─── Input handlers ─────────────────────────────────────────────────────────
+function onCellClick(r, c) {
+  if (gameEnded || currentPlayer === WHITE) return;
+  const flips = findFlips(r, c, currentPlayer);
+  if (!flips.length) return;
+  doMove(null, [r, c]);
+}
+
+function passTurn() {
+  if (gameEnded) return;
+  const opponent = currentPlayer === BLACK ? WHITE : BLACK;
+  if (!getValidMoves(currentPlayer).length) {
+    if (!getValidMoves(opponent).length) { endGame(); return; }
+    currentPlayer = opponent;
+    renderBoard(); updateInfo();
+    if (currentPlayer === WHITE) {
+      setMessage('黑方跳過，黑方電腦思考中...');
+      setTimeout(() => { setMessage(''); computerMove(); }, 500);
+    }
+    return;
+  }
+  currentPlayer = opponent;
+  renderBoard(); updateInfo();
+  if (currentPlayer === WHITE) {
+    setMessage('電腦思考中...');
+    setTimeout(() => { setMessage(''); computerMove(); }, 500);
+  }
+}
+
+function restartGame() {
+  init();
+  setMessage('');
+}
+
+// ─── Keyboard controls ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (gameEnded) return;
+  switch(e.key) {
+    case 'ArrowUp': case 'w': case 'W':
+      e.preventDefault();
+      if (cursorR > 0) { cursorR--; renderBoard(); }
+      break;
+    case 'ArrowDown': case 's': case 'S':
+      e.preventDefault();
+      if (cursorR < 7) { cursorR++; renderBoard(); }
+      break;
+    case 'ArrowLeft': case 'a': case 'A':
+      e.preventDefault();
+      if (cursorC > 0) { cursorC--; renderBoard(); }
+      break;
+    case 'ArrowRight': case 'd': case 'D':
+      e.preventDefault();
+      if (cursorC < 7) { cursorC++; renderBoard(); }
+      break;
+    case 'Enter': case ' ':
+      e.preventDefault();
+      if (currentPlayer !== WHITE) {
+        const flips = findFlips(cursorR, cursorC, currentPlayer);
+        if (flips.length) doMove(null, [cursorR, cursorC]);
+        else setMessage('這裡不能放子！');
+      }
+      break;
+    case 'p': case 'P': passTurn(); break;
+    case 'r': case 'R': restartGame(); break;
+    case 'Escape': restartGame(); break;
+  }
+});
+
+// ─── Start ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
