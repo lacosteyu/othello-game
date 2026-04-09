@@ -5,256 +5,347 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAIWAN - Othello</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a12; color: #e0e0e0; font-family: 'Courier New', Courier, monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .header { text-align: center; margin-bottom: 16px; }
-  .header h1 { font-size: 28px; color: #ffcc00; letter-spacing: 6px; text-shadow: 0 0 20px rgba(255,204,0,0.4); }
-  .header p { color: #888; font-size: 12px; margin-top: 4px; }
-  .game-info { display: flex; gap: 32px; margin-bottom: 12px; font-size: 18px; }
-  .info-item { text-align: center; }
-  .info-item .label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; }
-  .info-item .value { font-size: 28px; font-weight: bold; }
-  .info-item.black .value { color: #1a1a1a; text-shadow: 0 0 8px #555; }
-  .info-item.white .value { color: #f0f0f0; }
-  .info-item.turn .value { color: #ffcc00; transition: all 0.2s; }
-  .board { display: grid; grid-template-columns: repeat(8, 52px); grid-template-rows: repeat(8, 52px); border: 3px solid #3a3a5a; box-shadow: 0 0 40px rgba(80,80,180,0.3), inset 0 0 20px rgba(0,0,0,0.5); background: #1a1a2e; }
-  .cell { width: 52px; height: 52px; border: 1px solid #2a2a4a; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s; }
-  .cell:hover { background: rgba(255,255,255,0.05); }
-  .cell.valid-hint::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,204,0,0.25); border: 1px solid rgba(255,204,0,0.4); }
-  .cell.valid-hint:hover::after { background: rgba(255,204,0,0.5); }
-  .piece { width: 40px; height: 40px; border-radius: 50%; transition: transform 0.15s; position: relative; }
-  .piece.black { background: radial-gradient(circle at 35% 35%, #555, #1a1a1a 60%); box-shadow: 2px 2px 6px rgba(0,0,0,0.6), inset -2px -2px 4px rgba(0,0,0,0.4), inset 2px 2px 4px rgba(80,80,80,0.2); }
-  .piece.white { background: radial-gradient(circle at 35% 35%, #fff, #d0d0d0 60%); box-shadow: 2px 2px 6px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.1), inset 2px 2px 4px rgba(255,255,255,0.8); }
-  .piece.new { animation: place 0.25s ease-out; }
-  @keyframes place { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
-  .piece.flip { animation: flip 0.3s ease-in-out; }
-  @keyframes flip { 0% { transform: scaleY(1); } 50% { transform: scaleY(0.1); } 100% { transform: scaleY(1); } }
-  .controls { margin-top: 16px; display: flex; gap: 12px; }
-  .btn { padding: 8px 20px; background: transparent; border: 1px solid #3a3a6a; color: #aaa; font-family: inherit; font-size: 13px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
-  .btn:hover { border-color: #ffcc00; color: #ffcc00; }
-  .btn.danger { border-color: #553333; color: #aa6666; }
-  .btn.danger:hover { border-color: #ff6666; color: #ff6666; }
-  .message { margin-top: 14px; font-size: 14px; color: #ffcc00; min-height: 20px; text-align: center; letter-spacing: 1px; }
-  .game-over-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; flex-direction: column; z-index: 100; }
-  .game-over-overlay.show { display: flex; }
-  .game-over-overlay h2 { font-size: 36px; color: #ffcc00; letter-spacing: 4px; margin-bottom: 16px; text-shadow: 0 0 30px rgba(255,204,0,0.5); }
-  .game-over-overlay p { font-size: 20px; color: #ccc; margin-bottom: 24px; }
-  .game-over-overlay .btn { font-size: 16px; padding: 10px 32px; }
-  .legend { margin-top: 12px; font-size: 11px; color: #555; text-align: center; letter-spacing: 1px; }
-  .level-wrap { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 11px; color: #445544; letter-spacing: 1px; }
-  .level-wrap select { background: #0a0a12; border: 1px solid #1a2a1a; color: #55aa77; font-family: inherit; font-size: 11px; padding: 4px 8px; cursor: pointer; }
-  .level-wrap select:hover { border-color: #00ff88; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0a0a12;color:#e0e0e0;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .h{text-align:center;margin-bottom:14px;}
+  .h h1{font-size:28px;color:#ffcc00;letter-spacing:6px;text-shadow:0 0 20px rgba(255,204,0,.4);}
+  .h p{color:#888;font-size:12px;margin-top:4px;}
+  .info{display:flex;gap:32px;margin-bottom:12px;font-size:18px;}
+  .info-item{text-align:center;}
+  .info-item .l{color:#888;font-size:11px;text-transform:uppercase;letter-spacing:2px;}
+  .info-item .v{font-size:28px;font-weight:bold;}
+  .b{border:3px solid #3a3a5a;box-shadow:0 0 40px rgba(80,80,180,.3);background:#1a1a2e;display:grid;grid-template-columns:repeat(8,52px);grid-template-rows:repeat(8,52px);}
+  .cell{width:52px;height:52px;border:1px solid #2a2a4a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
+  .cell:hover{background:rgba(255,255,255,.05);}
+  .cell.vh::after{content:'';width:10px;height:10px;border-radius:50%;background:rgba(255,204,0,.25);border:1px solid rgba(255,204,0,.4);}
+  .cell.vh:hover::after{background:rgba(255,204,0,.5);}
+  .cell.cs{box-shadow:0 0 0 2px #ffcc00;}
+  .pc{width:40px;height:40px;border-radius:50%;transition:transform .15s;}
+  .pc.b{background:radial-gradient(circle at 35% 35%,#555,#1a1a1a 60%);box-shadow:2px 2px 6px rgba(0,0,0,.6),inset -2px -2px 4px rgba(0,0,0,.4),inset 2px 2px 4px rgba(80,80,80,.2);}
+  .pc.w{background:radial-gradient(circle at 35% 35%,#fff,#d0d0d0 60%);box-shadow:2px 2px 6px rgba(0,0,0,.4),inset -2px -2px 4px rgba(0,0,0,.1),inset 2px 2px 4px rgba(255,255,255,.8);}
+  .pc.n{animation:place .25s ease-out}
+  @keyframes place{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+  .pc.f{animation:flip .3s ease-in-out}
+  @keyframes flip{0%{transform:scaleY(1)}50%{transform:scaleY(0.1)}100%{transform:scaleY(1)}}
+  .msg{margin-top:12px;font-size:14px;color:#ffcc00;min-height:20px;text-align:center;letter-spacing:1px;}
+  .ctrl{margin-top:14px;display:flex;gap:10px;}
+  .btn{padding:7px 18px;background:transparent;border:1px solid #3a3a6a;color:#aaa;font-family:inherit;font-size:12px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+  .btn:hover{border-color:#ffcc00;color:#ffcc00;}
+  .btn.d{border-color:#553333;color:#aa6666;}
+  .btn.d:hover{border-color:#ff6666;color:#ff6666;}
+  .lv{margin-top:10px;display:flex;align-items:center;gap:10px;font-size:11px;color:#445544;letter-spacing:1px;}
+  .lv select{background:#0a0a12;border:1px solid #1a2a1a;color:#55aa77;font-family:inherit;font-size:11px;padding:4px 8px;cursor:pointer;}
+  .lg{margin-top:10px;font-size:10px;color:#334;text-align:center;letter-spacing:1px;}
+  .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;z-index:100;}
+  .ov.s{display:flex;}
+  .ov h2{font-size:36px;color:#ffcc00;letter-spacing:4px;margin-bottom:16px;text-shadow:0 0 30px rgba(255,204,0,.5);}
+  .ov p{font-size:20px;color:#ccc;margin-bottom:24px;}
+  .ov .btn{font-size:16px;padding:10px 32px;}
 </style>
 </head>
 <body>
-<div class="header"><h1>TAIWAN</h1><p>黑白棋 Othello / Reversi &nbsp;|&nbsp; 你持黑方 X</p></div>
-<div class="game-info">
-  <div class="info-item black"><div class="label">黑方 X（你）</div><div class="value" id="score-black">2</div></div>
-  <div class="info-item turn"><div class="label">目前輪到</div><div class="value" id="turn-indicator">●</div></div>
-  <div class="info-item white"><div class="label">白方 O（電腦）</div><div class="value" id="score-white">2</div></div>
+<div class="h"><h1>TAIWAN</h1><p>黑白棋 Othello &nbsp;|&nbsp; 你持黑方 X &nbsp;|&nbsp; 電腦持白方 O</p></div>
+<div class="info">
+  <div class="info-item"><div class="l">黑方 X（你）</div><div class="v" id="sb">2</div></div>
+  <div class="info-item"><div class="l">目前輪到</div><div class="v" id="ti">●</div></div>
+  <div class="info-item"><div class="l">白方 O（電腦）</div><div class="v" id="sw">2</div></div>
 </div>
-<div class="board-wrap"><div class="board" id="board"></div></div>
-<div class="message" id="message"></div>
-<div class="controls">
-  <button class="btn" onclick="passTurn()">Pass 跳過</button>
-  <button class="btn danger" onclick="restartGame()">Restart 重來</button>
+<div class="b" id="bd"></div>
+<div class="msg" id="msg"></div>
+<div class="ctrl">
+  <button class="btn" onclick="userPass()">Pass 跳過</button>
+  <button class="btn d" onclick="restart()">Restart 重來</button>
 </div>
-<div class="level-wrap"><label>AI 難度：</label><select id="levelSelect" onchange="setLevel(this.value)"><option value="2">EASY</option><option value="4" selected>NORMAL</option><option value="6">HARD</option><option value="8">EXPERT</option></select></div>
-<div class="legend">方向鍵/WASD 移動 &nbsp;|&nbsp; Enter/Space 放子 &nbsp;|&nbsp; P 跳過 &nbsp;|&nbsp; R 重來</div>
-<div class="game-over-overlay" id="game-over"><h2 id="winner-text">GAME OVER</h2><p id="final-score"></p><button class="btn" onclick="restartGame()">再玩一次</button></div>
-<script>
-const EMPTY=0,BLACK=1,WHITE=2,BS=8;
-const DIRS=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-// WDO weight table: corners=100, adj-corner=-25, edge=10, inner=1, danger=-5
-const W=[[100,-25,10,5,5,10,-25,100],[-25,-50,-2,-2,-2,-2,-50,-25],[10,-2,1,1,1,1,-2,10],[5,-2,1,1,1,1,-2,5],[5,-2,1,1,1,1,-2,5],[10,-2,1,1,1,1,-2,10],[-25,-50,-2,-2,-2,-2,-50,-25],[100,-25,10,5,5,10,-25,100]];
-const CRNS=[[0,0],[0,7],[7,0],[7,7]];
-const ADJS=[[0,1],[0,6],[1,0],[1,7],[6,0],[6,7],[7,1],[7,6]];
-let board,cur,curR,curC,over,depth;
+<div class="lv"><label>AI難度：</label><select id="lv" onchange="setLv(this.value)"><option value=2>EASY</option><option value=4 selected>NORMAL</option><option value=6>HARD</option><option value=10>EXPERT</option></select></div>
+<div class="lg">方向鍵/WASD 移動 &nbsp;|&nbsp; Enter/Space 放子 &nbsp;|&nbsp; P 跳過 &nbsp;|&nbsp; R 重來</div>
+<div class="ov" id="ov"><h2 id="wt"></h2><p id="fs"></p><button class="btn" onclick="restart()">再玩一次</button></div>
 
+<script>
+// === CONSTANTS ===
+var E=0,B=1,W=2,S=8;
+var DR=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+// WDO: corner=100, adj=-30, edge=5, inner=-2, deep-inner=-4
+var WDO=[[100,-30,5,1,-1,5,-30,100],[-30,-60,-3,-2,-2,-3,-60,-30],[5,-3,3,1,1,3,-3,5],[1,-2,1,1,1,1,-2,1],[-1,-2,1,1,1,1,-2,-1],[5,-3,3,1,1,3,-3,5],[-30,-60,-3,-2,-2,-3,-60,-30],[100,-30,5,1,-1,5,-30,100]];
+var CR=[[0,0],[0,7],[7,0],[7,7]];
+var ADJ=[[0,1],[0,6],[1,0],[1,7],[6,0],[6,7],[7,1],[7,6]];
+
+// === STATE ===
+var bd,cur,curR,curC,over,dpth,thinking;
+
+// === INIT ===
 function init(){
-  board=Array.from({length:BS},()=>Array(BS).fill(EMPTY));
-  board[3][3]=WHITE;board[3][4]=BLACK;board[4][3]=BLACK;board[4][4]=WHITE;
-  cur=BLACK;curR=3;curC=4;over=false;
-  render();updateInfo();hide();
+  bd=Array.from({length:S},function(){return Array(S).fill(E)});
+  bd[3][3]=W;bd[3][4]=B;bd[4][3]=B;bd[4][4]=W;
+  cur=B;curR=3;curC=4;over=false;thinking=false;
+  dpth=parseInt(document.getElementById('lv').value);
+  render();updInfo();hideOv();
 }
 
+// === RENDER ===
 function render(){
-  const el=document.getElementById('board');el.innerHTML='';
-  const vm=getM(cur);
-  for(let r=0;r<BS;r++)for(let c=0;c<BS;c++){
-    const cell=document.createElement('div');cell.className='cell';cell.dataset.r=r;cell.dataset.c=c;
-    if(r===curR&&c===curC)cell.style.boxShadow='0 0 0 2px #ffcc00';
-    if(vm.some(m=>m[0]===r&&m[1]===c)&&!over&&cur===BLACK)cell.classList.add('valid-hint');
-    if(board[r][c]!==EMPTY){const p=document.createElement('div');p.className='piece '+(board[r][c]===BLACK?'black':'white');p.id='p-'+r+'-'+c;cell.appendChild(p);}
-    cell.addEventListener('click',()=>click(r,c));el.appendChild(cell);
+  var el=document.getElementById('bd');el.innerHTML='';
+  var vm=getM(cur);
+  for(var r=0;r<S;r++)for(var c=0;c<S;c++){
+    var cell=document.createElement('div');cell.className='cell';cell.dataset.r=r;cell.dataset.c=c;
+    if(r===curR&&c===curC&&!over&&cur===B)cell.classList.add('cs');
+    if(vm.length&&!over&&cur===B&&isValid(r,c,cur))cell.classList.add('vh');
+    if(bd[r][c]!==E){var p=document.createElement('div');p.className='pc '+(bd[r][c]===B?'b':'w');p.id='p'+r+'_'+c;cell.appendChild(p);}
+    cell.addEventListener('click',function(r,c){return function(){onClick(r,c);};}(r,c));
+    el.appendChild(cell);
   }
 }
 
-function updateInfo(){
-  const bc=count(BLACK),wc=count(WHITE);
-  document.getElementById('score-black').textContent=bc;
-  document.getElementById('score-white').textContent=wc;
-  const t=document.getElementById('turn-indicator');
+function updInfo(){
+  var bc=cn(B),wc=cn(W);
+  document.getElementById('sb').textContent=bc;
+  document.getElementById('sw').textContent=wc;
+  var t=document.getElementById('ti');
   if(over){t.textContent='—';t.style.color='#444';}
-  else{t.textContent=cur===BLACK?'●':'○';t.style.color=cur===BLACK?'#ffcc00':'#f0f0f0';}
+  else{t.textContent=cur===B?'●':'○';t.style.color=cur===B?'#ffcc00':'#f0f0f0';t.style.textShadow=cur===B?'0 0 8px #ffcc00':'0 0 8px #aaa';}
 }
+function msg(s){document.getElementById('msg').textContent=s;}
 
-function msg(t){document.getElementById('message').textContent=t;}
+// === CORE LOGIC ===
+function isValid(r,c,player){return fls(r,c,player).length>0;}
 
-function flips(r,c,player){
-  if(board[r][c]!==EMPTY)return[];
-  const opp=player===BLACK?WHITE:BLACK;let f=[];
-  for(const[dr,dc]of DIRS){let nr=r+dr,nc=c+dc,line=[];
-    while(nr>=0&&nr<BS&&nc>=0&&nc<BS&&board[nr][nc]===opp){line.push([nr,nc]);nr+=dr;nc+=dc;}
-    if(line.length&&nr>=0&&nr<BS&&nc>=0&&nc<BS&&board[nr][nc]===player)f.push(...line);}
+function fls(r,c,player){
+  if(bd[r][c]!==E)return[];
+  var opp=player===B?W:B,f=[];
+  for(var i=0;i<DR.length;i++){
+    var d=DR[i],nr=r+d[0],nc=c+d[1],line=[];
+    while(nr>=0&&nr<S&&nc>=0&&nc<S&&bd[nr][nc]===opp){line.push([nr,nc]);nr+=d[0];nc+=d[1];}
+    if(line.length&&nr>=0&&nr<S&&nc>=0&&nc<S&&bd[nr][nc]===player)f.push.apply(f,line);
+  }
   return f;
 }
 
-function getM(player){const m=[];for(let r=0;r<BS;r++)for(let c=0;c<BS;c++)if(flips(r,c,player).length)m.push([r,c]);return m;}
-function count(p){return board.flat().filter(v=>v===p).length;}
+function getM(player){
+  var m=[];
+  for(var r=0;r<S;r++)for(var c=0;c<S;c++)if(isValid(r,c,player))m.push([r,c]);
+  return m;
+}
 
-function apply(b,r,c,player){
-  const nb=b.map(row=>[...row]);const opp=player===BLACK?WHITE:BLACK;nb[r][c]=player;
-  for(const[dr,dc]of DIRS){let nr=r+dr,nc=c+dc,line=[];
-    while(nr>=0&&nr<BS&&nc>=0&&nc<BS&&nb[nr][nc]===opp){line.push([nr,nc]);nr+=dr;nc+=dc;}
-    if(line.length&&nr>=0&&nr<BS&&nc>=0&&nc<BS&&nb[nr][nc]===player)line.forEach(([fr,fc])=>{nb[fr][fc]=player;});}
+function cn(p){var n=0;for(var r=0;r<S;r++)for(var c=0;c<S;c++)if(bd[r][c]===p)n++;return n;}
+
+function placePieces(r,c,player){
+  var f=fls(r,c,player);
+  bd[r][c]=player;
+  for(var i=0;i<f.length;i++)bd[f[i][0]][f[i][1]]=player;
+  return f;
+}
+
+// === BOARD ON COPY ===
+function copyBd(b){return b.map(function(r){return r.slice();});}
+function cntBd(b,p){var n=0;for(var r=0;r<S;r++)for(var c=0;c<S;c++)if(b[r][c]===p)n++;return n;}
+function flsBd(b,r,c,player){
+  if(b[r][c]!==E)return[];
+  var opp=player===B?W:B,f=[];
+  for(var i=0;i<DR.length;i++){
+    var d=DR[i],nr=r+d[0],nc=c+d[1],line=[];
+    while(nr>=0&&nr<S&&nc>=0&&nc<S&&b[nr][nc]===opp){line.push([nr,nc]);nr+=d[0];nc+=d[1];}
+    if(line.length&&nr>=0&&nr<S&&nc>=0&&nc<S&&b[nr][nc]===player)f.push.apply(f,line);
+  }
+  return f;
+}
+function getMB(b,player){
+  var m=[];for(var r=0;r<S;r++)for(var c=0;c<S;c++)if(flsBd(b,r,c,player).length)m.push([r,c]);return m;
+}
+function applyBd(b,r,c,player){
+  var nb=copyBd(b),opp=player===B?W:B;nb[r][c]=player;
+  for(var i=0;i<DR.length;i++){
+    var d=DR[i],nr=r+d[0],nc=c+d[1],line=[];
+    while(nr>=0&&nr<S&&nc>=0&&nc<S&&nb[nr][nc]===opp){line.push([nr,nc]);nr+=d[0];nc+=d[1];}
+    if(line.length&&nr>=0&&nr<S&&nc>=0&&nc<S&&nb[nr][nc]===player)for(var j=0;j<line.length;j++)nb[line[j][0]][line[j][1]]=player;
+  }
   return nb;
 }
 
-function cntB(b,p){return b.flat().filter(v=>v===p).length;}
-
-function evalB(b,player){
-  const opp=player===BLACK?WHITE:BLACK;let s=0;
-  const me=cntB(b,player),opp2=cntB(b,opp);
-  if(me+opp2===64||me===0||opp2===0)return(me-opp2)*1000;
-  for(let r=0;r<BS;r++)for(let c=0;c<BS;c++)if(b[r][c]===player)s+=W[r][c];else if(b[r][c]===opp)s-=W[r][c];
-  for(const[cr,cc]of CRNS){if(b[cr][cc]===player)s+=25;else if(b[cr][cc]===opp)s-=25;}
-  const myM=getMB(b,player).length,oppM=getMB(b,opp).length;
-  s+=myM*2;s-=oppM*2;
-  s-=(cntFront(b,player)-cntFront(b,opp));
-  for(const[ar,ac]of ADJS){if(b[ar][ac]===player)s-=5;else if(b[ar][ac]===opp)s+=5;}
-  s+=cntStable(b,player)*8;s-=cntStable(b,opp)*8;
+// === EVALUATION ===
+function evalBd(b,player){
+  var opp=player===B?W:B;
+  var me=cntBd(b,player),oppCnt=cntBd(b,opp),total=me+oppCnt;
+  if(total===64||me===0||oppCnt===0)return(me-oppCnt)*1000;
+  var s=0;
+  for(var r=0;r<S;r++)for(var c=0;c<S;c++){if(b[r][c]===player)s+=WDO[r][c];else if(b[r][c]===opp)s-=WDO[r][c];}
+  for(var i=0;i<CR.length;i++){if(b[CR[i][0]][CR[i][1]]===player)s+=30;else if(b[CR[i][0]][CR[i][1]]===opp)s-=30;}
+  for(var i=0;i<ADJ.length;i++){if(b[ADJ[i][0]][ADJ[i][1]]===player)s-=8;else if(b[ADJ[i][0]][ADJ[i][1]]===opp)s+=8;}
+  var myM=getMB(b,player).length,oppM=getMB(b,opp).length;
+  s+=(myM-oppM)*3;
   return s;
 }
 
-function cntFront(b,player){let n=0;
-  for(let r=0;r<BS;r++)for(let c=0;c<BS;c++)if(b[r][c]===player)for(const[dr,dc]of DIRS){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<BS&&nc>=0&&nc<BS&&b[nr][nc]===EMPTY){n++;break;}}
-  return n;
-}
-
-function cntStable(b,player){let n=CRNS.filter(([r,c])=>b[r][c]===player).length;
-  for(let i=0;i<BS;i++){if(b[0][i]===player)n++;if(b[7][i]===player)n++;if(b[i][0]===player)n++;if(b[i][7]===player)n++;}
-  return n;
-}
-
-function getMB(b,player){const m=[];for(let r=0;r<BS;r++)for(let c=0;c<BS;c++)if(fM(b,r,c,player).length)m.push([r,c]);return m;}
-function fM(b,r,c,player){if(b[r][c]!==EMPTY)return[];const opp=player===BLACK?WHITE:BLACK;let f=[];
-  for(const[dr,dc]of DIRS){let nr=r+dr,nc=c+dc,line=[];
-    while(nr>=0&&nr<BS&&nc>=0&&nc<BS&&b[nr][nc]===opp){line.push([nr,nc]);nr+=dr;nc+=dc;}
-    if(line.length&&nr>=0&&nr<BS&&nc>=0&&nc<BS&&b[nr][nc]===player)f.push(...line);}
-  return f;
-}
-
-function mm(b,d,a,bet,max,player){
-  const opp=player===BLACK?WHITE:BLACK;
-  const ms=getMB(b,max?player:opp);
-  const oppMs=getMB(b,player);
-  if(d===0||(ms.length===0&&oppMs.length===0))return[null,evalB(b,player)];
+// === MINIMAX ===
+function mm(b,d,a,bt,max,player){
+  var opp=player===B?W:B;
+  var ms=getMB(b,max?player:opp);
+  var oppMs=getMB(b,player);
+  if(d===0||(ms.length===0&&oppMs.length===0))return[null,evalBd(b,player)];
   if(max){
-    let best=[null,-Infinity];
-    if(ms.length===0)return[null,mm(b,d-1,a,bet,false,player)[1]];
-    for(const[r,c]of ms){
-      const nb=apply(b,r,c,player);
-      const v=mm(nb,d-1,a,bet,false,player)[1];
-      if(v>best[1])best=[[r,c],v];
-      a=Math.max(a,v);if(bet<=a)break;
+    if(ms.length===0)return[null,mm(b,d-1,a,bt,false,player)[1]];
+    var best=[null,-Infinity];
+    for(var i=0;i<ms.length;i++){
+      var nb=applyBd(b,ms[i][0],ms[i][1],player);
+      var v=mm(nb,d-1,a,bt,false,player)[1];
+      if(v>best[1])best=[ms[i],v];
+      a=Math.max(a,v);
+      if(bt<=a)break;
     }
     return best;
   }else{
-    let best=[null,Infinity];
-    if(ms.length===0)return[null,mm(b,d-1,a,bet,true,player)[1]];
-    for(const[r,c]of ms){
-      const nb=apply(b,r,c,opp);
-      const v=mm(nb,d-1,a,bet,true,player)[1];
-      if(v<best[1])best=[[r,c],v];
-      bet=Math.min(bet,v);if(bet<=a)break;
+    if(ms.length===0)return[null,mm(b,d-1,a,bt,true,player)[1]];
+    var best=[null,Infinity];
+    for(var i=0;i<ms.length;i++){
+      var nb=applyBd(b,ms[i][0],ms[i][1],opp);
+      var v=mm(nb,d-1,a,bt,true,player)[1];
+      if(v<best[1])best=[ms[i],v];
+      bt=Math.min(bt,v);
+      if(bt<=a)break;
     }
     return best;
   }
 }
 
+// === AI MOVE ===
 function aiMove(){
-  const ms=getM(WHITE);if(!ms.length)return;
-  const cm=ms.find(m=>CRNS.some(c=>c[0]===m[0]&&c[1]===m[1]));
-  if(cm){doM(cm);return;}
-  const safe=ms.filter(m=>!ADJS.some(a=>a[0]===m[0]&&a[1]===m[1]));
-  const cand=safe.length>0?safe:ms;
-  const[best]=mm(board,depth,-Infinity,Infinity,true,WHITE);
-  if(best){doM(best);return;}
-  let fb=cand[0],bf=flips(fb[0],fb[1],WHITE).length;
-  for(const m of cand){const f=flips(m[0],m[1],WHITE).length;if(f>bf){fb=m;bf=f;}}
-  doM([fb[0],fb[1]]);
+  thinking=true;
+  var ms=getM(W);
+  if(!ms.length){thinking=false;return;}
+  // Corner capture
+  var cm=null;for(var i=0;i<ms.length;i++){for(var j=0;j<CR.length;j++){if(ms[i][0]===CR[j][0]&&ms[i][1]===CR[j][1]){cm=ms[i];break;}}if(cm)break;}
+  if(cm){setTimeout(function(){doMove(cm,W);thinking=false;},50);return;}
+  // Avoid X-squares
+  var safe=[];for(var i=0;i<ms.length;i++){var skip=false;for(var j=0;j<ADJ.length;j++){if(ms[i][0]===ADJ[j][0]&&ms[i][1]===ADJ[j][1]){skip=true;break;}}if(!skip)safe.push(ms[i]);}
+  var cand=safe.length>0?safe:ms;
+  var result=mm(copyBd(bd),dpth,-Infinity,Infinity,true,W);
+  if(result[0]){setTimeout(function(){doMove(result[0],W);thinking=false;},50);}
+  else{var best=cand[0],bestF=fls(cand[0][0],cand[0][1],W).length;
+    for(var i=1;i<cand.length;i++){var f=fls(cand[i][0],cand[i][1],W).length;if(f>bestF){best=cand[i];bestF=f;}}
+    setTimeout(function(){doMove(best,W);thinking=false;},50);
+  }
 }
 
-function setLevel(v){depth=parseInt(v);}
-
-function doM([r,c]){
-  const f=flips(r,c,cur);board[r][c]=cur;
-  for(const[fr,fc]of f){const el=document.getElementById('p-'+fr+'-'+fc);if(el){el.classList.add('flip');setTimeout(()=>{board[fr][fc]=cur;el.className='piece '+(cur===BLACK?'black':'white');setTimeout(()=>el.classList.remove('flip'),300);},150);}}
-  setTimeout(()=>{render();const n=document.getElementById('p-'+r+'-'+c);if(n)n.classList.add('new');updateInfo();nextTurn();},f.length?200:10);
+// === DO MOVE ===
+function doMove(m,player){
+  var r=m[0],c=m[1];
+  var f=fls(r,c,player);
+  bd[r][c]=player;
+  // Animate flips
+  for(var i=0;i<f.length;i++){
+    var el=document.getElementById('p'+f[i][0]+'_'+f[i][1]);
+    if(el){
+      (function(el,fri,fc){
+        el.classList.add('f');
+        setTimeout(function(){
+          bd[fri][fc]=player;
+          el.className='pc '+(player===B?'b':'w');
+          setTimeout(function(){el.classList.remove('f');},300);
+        },150);
+      })(el,f[i][0],f[i][1]);
+    }
+  }
+  // Animate new piece
+  var delay=f.length>0?200:10;
+  setTimeout(function(){
+    render();
+    var newEl=document.getElementById('p'+r+'_'+c);
+    if(newEl)newEl.classList.add('n');
+    updInfo();
+    setTimeout(function(){advanceTurn();},10);
+  },delay);
 }
 
-function nextTurn(){
-  const opp=cur===BLACK?WHITE:BLACK;
-  if(getM(opp).length){cur=opp;}
-  else if(getM(cur).length){msg('對手無法移動，繼續...');setTimeout(()=>{msg('');render();updateInfo();},1200);return;}
-  else{end();return;}
-  render();updateInfo();
-  if(cur===WHITE&&!over){msg('🤖 電腦思考中...');setTimeout(()=>{msg('');aiMove();},300);}
-}
-
-function end(){
-  over=true;const bc=count(BLACK),wc=count(WHITE);
-  let t;if(bc>wc)t='你勝了！ '+bc+' : '+wc;else if(wc>bc)t='電腦勝！ '+bc+' : '+wc;else t='平手！ '+bc+' : '+wc;
-  document.getElementById('winner-text').textContent=t;
-  document.getElementById('final-score').textContent=bc+' - '+wc;
-  document.getElementById('game-over').classList.add('show');updateInfo();
-}
-
-function hide(){document.getElementById('game-over').classList.remove('show');}
-
-function click(r,c){if(over||cur===WHITE)return;const f=flips(r,c,cur);if(!f.length)return;doM([r,c]);}
-
-function pass(){
-  if(over)return;
-  const opp=cur===BLACK?WHITE:BLACK;
-  if(!getM(cur).length){
-    if(!getM(opp).length){end();return;}
-    cur=opp;render();updateInfo();
-    if(cur===WHITE){msg('🤖 電腦思考中...');setTimeout(()=>{msg('');aiMove();},500);}
+// === TURN FLOW ===
+function advanceTurn(){
+  var opp=cur===B?W:B;
+  var myMs=getM(cur),oppMs=getM(opp);
+  // Case 1: current player has moves -> switch to opponent
+  if(myMs.length){
+    cur=opp;
+  } else if(oppMs.length){
+    // Current has no moves, opponent does -> switch and auto-pass message
+    msg('('+(cur===B?'黑方':'白方')+'無合法棋步，自動跳過...)');
+    cur=opp;
+    setTimeout(function(){
+      msg('');
+      if(cur===W){thinking=true;render();updInfo();msg('🤖 電腦思考中...');setTimeout(function(){msg('');aiMove();},200);}
+      else{render();updInfo();}
+    },1000);
+    return;
+  } else {
+    // Neither has moves -> game over
+    endGame();
     return;
   }
-  cur=opp;render();updateInfo();
-  if(cur===WHITE){msg('🤖 電腦思考中...');setTimeout(()=>{msg('');aiMove();},500);}
+  render();updInfo();
+  if(cur===W&&!over){thinking=true;msg('🤖 電腦思考中...');setTimeout(function(){msg('');aiMove();},200);}
 }
 
-function restart(){init();msg('');depth=parseInt(document.getElementById('levelSelect').value);}
+function endGame(){
+  over=true;var bc=cn(B),wc=cn(W);
+  var t;if(bc>wc)t='你勝了！';else if(wc>bc)t='電腦勝！';else t='平手！';
+  document.getElementById('wt').textContent=t;
+  document.getElementById('fs').textContent=bc+' - '+wc;
+  document.getElementById('ov').classList.add('s');
+  updInfo();
+}
+function hideOv(){document.getElementById('ov').classList.remove('s');}
 
-document.addEventListener('keydown',e=>{
-  if(over)return;
+// === INPUT ===
+function onClick(r,c){
+  if(over||cur===W||thinking)return;
+  if(!isValid(r,c,B))return;
+  doMove([r,c],B);
+}
+
+function userPass(){
+  if(over||thinking)return;
+  var myMs=getM(cur);
+  if(myMs.length){
+    // Player chooses to pass manually
+    var opp=cur===B?W:B;
+    if(!getM(opp).length){
+      // Opp also has no moves -> game over
+      endGame();return;
+    }
+    msg('('+(cur===B?'黑方':'白方')+'自願跳過)');
+    cur=opp;
+    setTimeout(function(){
+      msg('');
+      if(cur===W){thinking=true;render();updInfo();msg('🤖 電腦思考中...');setTimeout(function(){msg('');aiMove();},200);}
+      else{render();updInfo();}
+    },800);
+  } else {
+    // No valid moves - auto pass
+    advanceTurn();
+  }
+}
+
+function restart(){
+  init();msg('');
+}
+
+function setLv(v){dpth=parseInt(v);}
+
+// === KEYBOARD ===
+document.addEventListener('keydown',function(e){
+  if(over||thinking)return;
   switch(e.key){
     case'ArrowUp':case'w':case'W':e.preventDefault();if(curR>0){curR--;render();}break;
     case'ArrowDown':case's':case'S':e.preventDefault();if(curR<7){curR++;render();}break;
     case'ArrowLeft':case'a':case'A':e.preventDefault();if(curC>0){curC--;render();}break;
     case'ArrowRight':case'd':case'D':e.preventDefault();if(curC<7){curC++;render();}break;
-    case'Enter':case' ':e.preventDefault();if(cur!==WHITE){const f=flips(curR,curC,cur);if(f.length)doM([curR,curC]);else msg('這裡不能放子！');}break;
-    case'p':case'P':pass();break;
+    case'Enter':case' ':
+      e.preventDefault();
+      if(cur===B&&!thinking){if(isValid(curR,curC,B))doMove([curR,curC],B);else msg('這裡不能放子！');}
+      break;
+    case'p':case'P':userPass();break;
     case'r':case'R':restart();break;
     case'Escape':restart();break;
   }
 });
 
-depth=4;init();
+// === START ===
+init();
 </script>
 </body>
 </html>
